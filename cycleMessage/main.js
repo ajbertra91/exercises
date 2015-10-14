@@ -7,7 +7,14 @@
    *  put the last letter in front and so on...
    */
 
-  var msg = document.getElementById('message').innerHTML;
+  var msgEl;
+  var msg;
+
+  var getString = function(element) {
+    msgEl = document.getElementById(element);
+    msg = msgEl.innerHTML;
+  }
+  // --
   var makeStringArray = function(string) {
     var array = [];
     for (var l in string) {
@@ -20,7 +27,6 @@
     array.forEach(function(i) {
       string += i;
     });
-    console.debug('string: ', string);
     return string;
   }
   var getLast = function(array) {
@@ -28,22 +34,27 @@
     return last;
   };
   var moveToFirst = function(last,array) {
-    console.debug('last: ', last);
-    console.debug('array: ', array);
-    var newString = last + (makeArrayString(array));
+    return last + (makeArrayString(removeLastChar(array)));
+  }
+  var removeLastChar = function(array) {
+    var length = array.length - 1;
+    var nArray = array.slice(0, length);
+    return nArray;
   }
   var getNewString = function(string) {
-    console.debug('string: ', string);
     var a = makeStringArray(msg);
-    console.debug('a: ', a);
     var l = getLast(makeStringArray(string));
-    console.debug('l: ', l);
     var newS = moveToFirst( l,a );
-    console.debug('newS: ', newS);
     return newS;
   }
+  // --
 
-  console.log('new string', getNewString(msg) )
+  for (var i = 0; i < 60; i++) {
+    setTimeout(function() {
+      getString('message');
+      msgEl.innerHTML = getNewString(msg);
+    }, i * 1000);
+  }
 
-
+  console.log('new string', getNewString(msg) );
 })();
