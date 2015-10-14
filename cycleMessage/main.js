@@ -14,7 +14,6 @@
     msgEl = document.getElementById(element);
     msg = msgEl.innerHTML;
   }
-  // --
   var makeStringArray = function(string) {
     var array = [];
     for (var l in string) {
@@ -34,9 +33,11 @@
     return last;
   };
   var moveToFirst = function(last,array) {
+    // biggest point of mutation... adding last character to the front of the array/string
     return last + (makeArrayString(removeLastChar(array)));
   }
   var removeLastChar = function(array) {
+    // biggest point of mutation... removing the last character of the array/string
     var length = array.length - 1;
     var nArray = array.slice(0, length);
     return nArray;
@@ -47,14 +48,15 @@
     var newS = moveToFirst( l,a );
     return newS;
   }
-  // --
 
+
+  // loop over the function calls once every second for one minute
   for (var i = 0; i < 60; i++) {
     setTimeout(function() {
       getString('message');
       msgEl.innerHTML = getNewString(msg);
+      console.log('new string:', getNewString(msg) ); // logs out the new string for fun
     }, i * 1000);
   }
 
-  console.log('new string', getNewString(msg) );
 })();
