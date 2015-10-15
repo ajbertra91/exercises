@@ -9,23 +9,20 @@
 
   var answerEl = document.getElementById('answer')
       ,year = ''
-      ,firstYear = 2014
       ,lastYear = 2050
-      ,numberOfYears = lastYear - firstYear
   ;
 
-  var getTheDay = function getTheDay(dateString) {
-    return new Date(dateString).getDay();
+  var getTheDay = function getTheDay(year) {
+    return new Date(year, 0, 1).getDay();
   };
 
-  for (var i = 0; i <= numberOfYears; i++) {
-    if (getTheDay('January 1, ' + firstYear + i) === 0) {
-      year = firstYear + i;
-      answerEl.innerHTML = year;
+  for (var year = 2014; year <= lastYear; year++) {
+    console.debug('getTheDay("' + year + '"): ', getTheDay(year));
+    if (getTheDay(year) === 0) {
+      console.debug('year: ', year);
     }
   }
 
-  console.debug('getTheDay("January 1, 2014"): ', getTheDay("January 1, 2014"));
 
   
 })();
