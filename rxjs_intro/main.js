@@ -369,3 +369,77 @@
 //       console.log('ERROR: ', err);
 //     }
 //   );
+
+
+/* 
+ * additional thoughts/techniques
+ */
+
+/*
+ * IMPERATIVE
+ */
+// var getFullNames = function (objs) {
+//   var result = [];
+//   for(var i=0,l=objs.length; i<l; i++) {
+//     var fname = objs[i].firstName,
+//         lname = objs[i].lastName;
+
+//     result.push(fname + " " + lname);
+//   }
+//   return result;
+// }
+
+// users = [
+//   {firstName: "barney", lastName: "Rubble"},
+//   {firstName: "fred", lastName: "Flinstone"}
+// ];
+
+// console.log(getFullNames(users));
+
+/*
+ * DECLARATIVE
+ * No computation happens unitl line 126
+ * uses HIGHER ORDER FUNCTIONS (HOF) a combinator: a function that 
+ * takes another function and returns a new composed function
+ */
+// var juxt = require('mori').juxt;
+// var _ = require('ramda');
+
+// // first, we define a function which will get us both parts of a name
+// var getNameParts = juxt(_.prop("firstName"),
+//                         _.prop("lastName"));
+
+// // we also need a function which will join the parts together
+// var joinNameParts = _.join(" ");
+
+// // and lastly, we define a function which will apply the two functions above
+// // to every element of a collection
+// var getFullNames = _.map(_.compose(joinNameParts, getNameParts));
+
+// users = [
+//   {firstName: "barney", lastName: "Rubble"},
+//   {firstName: "fred", lastName: "Flinstone"}
+// ];
+
+// // finally we apply the resulting function to get our resulting
+// console.log(getFullNames(users));
+
+
+/*
+ * CURRY
+ */
+// var R = require("ramda");
+
+// var addFourNumbers = function(a, b, c, d) {return a + b + c + d;};
+// var curriedAddFourNumbers = R.curry(addFourNumbers);
+
+// // now we can call curriedAddFourNumbers in a couple of different ways
+// var f = curriedAddFourNumbers; // let's give it a shorter name for convenience
+
+// console.log(
+//   addFourNumbers(1, 2, 3, 4),
+//   f(1, 2, 3, 4),
+//   f(1)(2)(3)(4),
+//   f(1, 2, 3)(4),
+//   f(1)(2, 3, 4)
+// );
