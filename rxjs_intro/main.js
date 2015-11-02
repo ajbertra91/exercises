@@ -230,8 +230,142 @@
  *   |                  MERGE                 |
  * C -----0------0-1--------2-------1-3-------->
  */
-var a = Rx.Observable.interval(200).map(function (i) { return 'A' + i }).take(20);
-var b = Rx.Observable.interval(100).map(function (i) { return 'B' + i }).take(20);
-Rx.Observable.merge(a,b).subscribe(function (x) { console.log(x); });
+// var a = Rx.Observable.interval(200).map(function (i) { return 'A' + i }).take(20);
+// var b = Rx.Observable.interval(100).map(function (i) { return 'B' + i }).take(20);
+// Rx.Observable.merge(a,b).subscribe(function (x) { console.log(x); });
 
+/*
+ * Aggregate Observables with .reduce()
+ */
+// var avg = Rx.Observable.range(0,5)
+//   .reduce(function (prev, cur) {
+//     return {
+//       sum: prev.sum + cur,
+//       count: prev.count + 1
+//     };
+//   }, {sum: 0, countL 0})
+//   .map(function (o) {
+//     return o.sum / o.count;
+//   });
 
+// var subscription = avg.subscribe(function (x) {
+//   console.log('Average is', x);
+// });
+
+/*
+ * Aggregate Infinite Observables with .scan()
+ */
+// var avg = Rx.Observable.interval(1000)
+//   .scan(function (prev, cur) {
+//     return {
+//       sum: prev.sum + cur,
+//       count: prev.count + 1
+//     };
+//   }, {sum: 0, count: 0})
+//   .map(function (o) {
+//     return o.sum / o.count;
+//   });
+
+// var subscription = avg.subscribe(function (x) { 
+//   console.log(x);
+// });
+
+/*
+ * Aggregate Observables with .flatMap() 
+ * can make flatMap with reduce like this
+ */
+ // function concatAll(source) {
+ //  return source.reduce(function(a,b) {
+ //    return a.concat(b)
+ //  });
+ // }
+ // used like this: 
+ // concatAll([0,1,2,3],[4,5,6],[7,8,9]);
+ // => [0,1,2,3,4,5,6,7,8,9]
+
+/*
+ * Cancel Observables with .dispose()
+ */
+// var counter = Rx.Observable.interval(1000).take(20);
+// var subscription1 = counter.subscribe(function (i) {
+//   console.log('Subscription 1: ', i);
+// });
+// var subscription2 = counter.subscribe(function (i) {
+//   console.log('Subscription 2: ', i);
+// });
+// setTimeout(function () {
+//   console.log('Canceling subscription2!');
+//   subscription2.dispose();
+// }, 4000);
+
+/*
+ * Cancel Observables that wrap external API
+ * but it doesn't cancel the API action
+ */
+// var p = new Promise(function (resolve,reject) {
+//   window.setTimeout(resolve, 2000);
+// });
+// p.then(function () {
+//   console.log('Promise resolved.');
+//   // some unexpected side effect could happen here
+// });
+// var subscription = Rx.Observable.fromPromise(p).subscribe(function (msg) {
+//   console.log('Observable resolved!');
+// });
+// subscription.dispose();
+
+/*
+ * Error Handling with onError()
+ */
+// function getJSON(arr) {
+//   return Rx.Observable.from(arr).map(function (str) {
+//     var parsedJSON = JSON.parse(str);
+//     return parsedJSON;
+//   });
+// }
+// getJSON([
+//   '{"1":1, "2":2}',
+//   '{"sucess: true}',
+//   '{"enabled": true}'
+// ]).subscribe(
+//   function (json) { console.log('Parsed JSON',json); },
+//   function (err) { console.log(err.message); }
+// )
+
+/*
+ * Error Handling with .catch()
+ */
+// function getJSON(arr) {
+//   return Rx.Observable.from(arr).map(function (str) {
+//     var parsedJSON = JSON.parse(str);
+//     return parsedJSON;
+//   });
+// }
+
+// var caught = getJSON([ '{"1":1, "2":2}', '{"1: 1}' ]).catch(
+//   Rx.Observable.return({
+//     error: 'There was an error parsing JSON'
+//   })
+// );
+
+// caught.subscribe(
+//   function (json) {
+//     console.log('Parsed JSON: ', json);
+//   },
+//   function (err) {
+//     console.log('ERROR', err.message);
+//   }
+// );
+
+/*
+ * Error Handling with .retry()
+ */
+// Rx.DOM.get('/products').retry(5)
+//   .subscribe(
+//     function (xhr) {
+//       console.log(xhr);
+//     },
+//     function (err) {
+//       console.log('ERROR: ', err);
+//     }
+//   );

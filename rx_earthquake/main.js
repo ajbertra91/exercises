@@ -1,35 +1,33 @@
-/*
- * Aggregate Observables with .reduce()
- */
-var avg = Rx.Observable.range(0,5)
-  .reduce(function (prev, cur) {
-    return {
-      sum: prev.sum + cur,
-      count: prev.count + 1
-    };
-  }, {sum: 0, countL 0})
-  .map(function (o) {
-    return o.sum / o.count;
-  });
-
-var subscription = avg.subscribe(function (x) {
-  console.log('Average is', x);
+var quakes = Rx.Observable.create(function (observer) {
+  window.eqfeed_callback = function (response) {
+    var quakes = response.features;
+    quakes.forEach(function (quake) {
+      observer.onNext(quake);
+    });
+  };
+  loadJSONP(QUAKE_URL);
+});
+quakes.subscribe(function (quake) {
+  var coords = quake.geometry.coordinates;
+  var size = quake.properties.mag * 10000;
+  L.circle([coords[1], coords[0]], size).addTo(map);
 });
 
-/*
- * Aggregate Infinite Observables with .scan()
- */
-var avg = Rx.Observable.interval(1000)
-  .scan(function (prev, cur) {
-    return {
-      sum: prev.sum + cur,
-      count: prev.count + 1
-    };
-  }, {sum: 0, count: 0})
-  .map(function (o) {
-    return o.sum / o.count;
-  });
 
-var subscription = avg.subscribe(function (x) { 
-  console.log(x);
-});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
