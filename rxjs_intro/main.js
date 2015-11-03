@@ -443,3 +443,306 @@
 //   f(1, 2, 3)(4),
 //   f(1)(2, 3, 4)
 // );
+
+/* *******************
+ * Observable Pipeline
+ * An Observable pipeline is a group of operators chained together, 
+ * where each one of them takes an Observable as input 
+ * and returns an Observable as output.
+ */
+// Rx.Observable
+//   .from([1,2,3,4,5,6,7,8])
+//   .filter(function (val) {
+//     return val % 2;
+//   })
+//   .map(function (val) {
+//     return val * 10;
+//   })
+//   .subscribe(log);
+
+/* *******************
+ * Observable Pipeline - avoiding external state
+ */
+
+// with EXTERNAL state
+// BAD
+// var distance = {
+//   x: 0
+//   ,y: 0
+//   ,lastX: 0
+//   ,lastY: 0
+// };
+
+// function updateDistance(e) {
+//   distance.x += Math.abs(distance.lastX - e.clientX);
+//   distance.y += Math.abs(distance.lastY - e.clientY);
+
+//   distance.lastX = e.clientX;
+//   distance.lastY = e.clientY;
+
+//   return distance.x + distance.y;
+// }
+
+// var clicks = Rx.Observable
+//   .fromEvent(document, 'click')
+//   .map(updateDistance);
+
+// clicks.subscribe(function (distance) {
+//   console.log('Sibscriber 1 - distance: ' + distance + ' pixels');
+// });
+
+// clicks.subscribe(function(distance) {
+//   console.log('Subscriber 2 - distance: ' + distance + ' pixels');
+// });
+
+// with INTERNAL state
+// GOOD
+// function updateDistance(distance, e) {
+//   return {
+//     x: Math.abs(distance.lastX - e.clientX),
+//     y: Math.abs(distance.lastY - e.clientY),
+//     lastX: e.clientX,
+//     lastY: e.clientY
+//   };
+// }
+
+// var clicks = Rx.Observable
+//   .fromEvent(document, 'click')
+//   .scan(updateDistance, {
+//     x: 0,
+//     y: 0,
+//     lastX: 0,
+//     lastY: 0
+//   });
+
+// clicks.subscribe(function(clickInfo) {
+//   console.log('Click Subscriber', clickInfo);
+// });
+
+/* *******************
+ * RxJS's Subject Class
+ * A Subject is a type that implements both Observer and Observable types.
+ * As an Observer, it can subscribe to Observables, 
+ * and as an Observable it can produce values and have Observers subscribe to it.
+ */
+// var subject = new Rx.Subject();
+// var source = Rx.Observable.interval(300)
+//   .map(function (v) {
+//     return 'Interval message #' + v;
+//   })
+//   .take(5);
+
+// source.subscribe(subject);
+
+// var subscription = subject.subscribe(
+//   function onNext(x) { console.log('onNext: ' + x); },
+//   function onError(e) { console.log('onError: ' + e.message); },
+//   function onCompleted() { console.log('onCompleted'); }
+// );
+
+// subject.onNext('Our message #1');
+// subject.onNext('Our message #2');
+// setTimeout(function() {
+//   subject.onCompleted();
+// }, 1000);
+
+/* *******************
+ * AsynSubject
+ * emits the last value of a sequence only if the sequence completes.
+ * This value is then cached forever, and any Observer that subscribes
+ * after the value has been emitted will receive it right away.
+ * GOOD FOR AJAX
+ */
+// var delayedRange = Rx.Observable.range(1,100).delay(1000);
+// var subject = new Rx.AsyncSubject();
+
+// delayedRange.subscribe(subject);
+
+// subject.subscribe(
+//   function onNext(item) { console.log('Value', item); }, // 100 (last value emitted)
+//   function onError(erro) { console.log('err: ', err); },
+//   function onCompleted() { console.log('Completed!'); }
+// );
+
+/* *******************
+ * ASYNC Subject - realistic example
+ */
+// function getProducts(url) {
+//   var subject;
+
+//   return Rx.Observable.create(function (observer) { //1
+//     if (!subject) {
+//       subject = new Rx.AsyncSubject();
+//       Rx.DOM.get(url).subscribe(subject); //2
+//     }
+//     return subject.subscribe(observer); //3
+//   });
+// }
+
+// var products = getProducts('/products'); //4
+
+// products.subscribe( //5 // Will trigger request and receive the response when read
+//   function onNext(result) { console.debug('result: ', result); },
+//   function onError(err) { console.debug('err: ', err); }
+// );
+
+// setTimeout(function () { //6 // Will receive the result immediately because it's cached
+//   products.subscribe(
+//     function onNext(result) { console.debug('result: ', result); },
+//     function onError(err) { console.debug('err: ', err); }
+//   );
+// }, 5000);
+
+/*
+//1 getProducts returns an Observable sequence. We create it here.
+//2 If we haven’t created an AsyncSubject yet, we create it and subscribe it to
+    the Observable that Rx.DOM.Request.get(url) returns
+//3 We subscribe the Observer to the AsyncSubject. Every time an Observer subscribes to the Observable,
+    it will actually be subscribed to the Async- Subject, which is acting as a proxy between the 
+    Observable retrieving the URL and the Observers.
+//4 We create the Observable that retrieves the URL "products" and store it in the products variable.
+//5 This is the first subscription and will kick off the retrieval of the URL and log the results when the URL is retrieved.
+//6 This is the second subscription, which runs five seconds after the first one.
+    Since at that time the URL has already been retrieved, there’s no need for another network request.
+    It will receive the result of the request immediately because it is already stored in the AsyncSubject subject.
+*/
+
+
+
+/*
+ * BEHAVIOR Subject
+ * stores last value and then gets all the new ones
+ */
+// var subject = new Rx.BehaviorSubject('Waiting for content');
+
+// subject.subscribe(
+//   function(result) {
+//     document.body.textContent = result.response || result;
+//   },
+//   function(err) {
+//     document.body.textContent = 'There was an error retrieving content';
+//   }
+// );
+
+// Rx.DOM.get('/remote/content').subscribe(subject);
+
+
+/*
+ * REPLAY Subject
+ * caches its values and re-emits them to Observer that subscribes
+ */
+
+// //Subject
+// var subject = new Rx.Subject();
+// subject.onNext(1);
+// subject.subscribe(function(n) { console.log('Received value:', n);
+// });
+// subject.onNext(2);
+// subject.onNext(3);
+
+// // => Received value: 2 (missed value 1 :( )
+// // => Received value: 3
+
+// //ReplaySubject
+// var subject = new Rx.ReplaySubject();
+// subject.onNext(1);
+// subject.subscribe(function(n) { console.log('Received value:', n);
+// });
+// subject.onNext(2);
+// subject.onNext(3);
+
+// // => Received value: 1 (replayed missed value :) ) 
+// // => Received value: 2
+// // => Received value: 3
+
+/*
+ * REPLAY Subject
+ * buffer size of 2
+ */
+// var subject = new Rx.ReplaySubject(2); // Buffer size of 2
+
+// subject.onNext(1);
+// subject.onNext(2);
+// subject.onNext(3);
+// subject.onNext(4);
+// subject.onNext(5);
+// subject.onNext(6);
+
+
+// subject.subscribe(function(n) {
+//   console.log('Received value:', n);
+// });
+// // => Received value: 5
+// // => Received value: 6
+
+
+/*
+ * REPLAY Subject
+ * buffer size with time, taken as second parameter
+ */
+// var subject = new Rx.ReplaySubject(null, 200); // Buffer size of 200ms
+
+// setTimeout(function() {
+//   subject.onNext(1);
+// }, 100);
+// setTimeout(function() {
+//   subject.onNext(2);
+// }, 200);
+// setTimeout(function() {
+//   subject.onNext(3);
+// }, 300);
+// setTimeout(function() {
+//   subject.subscribe(function(n) {
+//     console.log('Received value:', n);
+//   });
+//   subject.onNext(4);
+// }, 350);
+
+/*
+ * HOT Observables
+ * both subscribers receive the same values from the Observable 
+ * as they are emitted. To JavaScript programmers, that behavior 
+ * feels natural because it resembles how JavaScript events work.
+ */
+// var onMove = Rx.Observable.fromEvent(document, 'mousemove');
+// var subscriber1 = onMove.subscribe(function(e) {
+//   console.log('Subscriber1:', e.clientX, e.clientY);
+// });
+// var subscriber2 = onMove.subscribe(function(e) {
+//   console.log('Subscriber2:', e.clientX, e.clientY);
+// });
+
+/*
+ * COLD Observables
+ * both subscribers receive the same values from the Observable 
+ * as they are emitted. To JavaScript programmers, that behavior 
+ * feels natural because it resembles how JavaScript events work.
+ */
+// function printValue(value) {
+//   console.log(value);
+// }
+// var rangeToFive = Rx.Observable.range(1, 5); // range is a cold observable. Ever Observer that subscribes to it will get the same entire range
+// var obs1 = rangeToFive.subscribe(printValue); // 1, 2, 3, 4, 5
+// var obs2 = Rx.Observable
+//   .delay(2000)
+//   .flatMap(function() {
+//     return rangeToFive.subscribe(printValue); // 1, 2, 3, 4, 5 });
+//   });
+
+
+// Create an Observable that yields a value every second
+var source = Rx.Observable.interval(1000);
+var publisher = source.publish();
+// Even if we are subscribing, no values are pushed yet.
+var observer1 = publisher.subscribe(function (x) {
+  console.log('Observer 1: ' + x);
+});
+// publisher connects and starts publishing values
+publisher.connect();
+
+setTimeout(function() {
+  // 5 seconds later, observer2 subscribes to it and starts receiving // current values, not the whole sequence.
+  var observer2 = publisher.subscribe(function (x) {
+    console.log('Observer 2: ' + x);
+  });
+}, 5000);
