@@ -21,6 +21,7 @@ function makeRow(props) {
 }
 
 function initialize() {
+  var socket = Rx.DOM.fromWebSocket('ws://127.0.0.1:8080');
   var QUAKE_URL = 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/' +
   'summary/all_day.geojsonp';
 
